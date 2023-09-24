@@ -44,21 +44,6 @@ function walkAll(direction: string, initialPosition: [number, number], storeRout
     return currentPosition;
 }
 
-function move(direction: string, from: [number, number], distance: number): [number, number] {
-    const [x, y] = from;
-    switch (direction) {
-        case 'N':
-            return [x, y + distance];
-        case 'E':
-            return [x + distance, y];
-        case 'S':
-            return [x, y - distance];
-        case 'W':
-            return [x - distance, y];
-        default: throw new Error(`Unknown direction ${direction}`);
-    }
-}
-
 function checkIntersection(
     store: {from: [number, number], to: [number, number]}[],
     challenger: {from: [number, number], to: [number, number]}): [number, number] | undefined {
