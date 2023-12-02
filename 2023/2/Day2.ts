@@ -22,9 +22,7 @@ console.log('Part 2:', getMinCubesSum(parseGames(games)));
 function getPossibleGamesSum(games: Game[]): number {
     return games.reduce((sum, game) => {
         const findExpression = (set: GameSet) => set['red'] > MAX_RED_CUBES || set['green'] > MAX_GREEN_CUBES || set['blue'] > MAX_BLUE_CUBES;
-        if (game.sets.find(findExpression)) {
-            return sum;
-        }
+        if (game.sets.find(findExpression)) return sum;
         return sum + game.id;
     }, 0);
 }
