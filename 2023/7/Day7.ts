@@ -27,20 +27,14 @@ const consequenceMap = {
         [HandType.HIGH_CARD]: HandType.ONE_PAIR
     },
     2: {
-        [HandType.FOUR_OF_A_KIND]: HandType.FIVE_OF_A_KIND,
         [HandType.FULL_HOUSE]: HandType.FIVE_OF_A_KIND,
         [HandType.THREE_OF_A_KIND]: HandType.FOUR_OF_A_KIND,
         [HandType.TWO_PAIR]: HandType.FOUR_OF_A_KIND,
         [HandType.ONE_PAIR]: HandType.THREE_OF_A_KIND,
-        [HandType.HIGH_CARD]: HandType.THREE_OF_A_KIND
     },
     3: {
-        [HandType.FOUR_OF_A_KIND]: HandType.FIVE_OF_A_KIND,
         [HandType.FULL_HOUSE]: HandType.FIVE_OF_A_KIND,
-        [HandType.THREE_OF_A_KIND]: HandType.FOUR_OF_A_KIND,
-        [HandType.TWO_PAIR]: HandType.FOUR_OF_A_KIND,
-        [HandType.ONE_PAIR]: HandType.FULL_HOUSE,
-        [HandType.HIGH_CARD]: HandType.THREE_OF_A_KIND
+        [HandType.THREE_OF_A_KIND]: HandType.FOUR_OF_A_KIND
     }
 
 };
