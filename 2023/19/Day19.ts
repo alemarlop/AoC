@@ -1,112 +1,154 @@
-enum Category {
-    x = 'x',
-    m = 'm',
-    a = 'a',
-    s = 's',
-}
-
-interface Workflow {
-    id: string;
-    conditions: ((x: number, k: string) => string | undefined)[];
-    otherwise: string;
-}
-
-interface Part {
-    currentWorkflowId: string | 'A' | 'R';
-    [Category.x]: number;
-    [Category.m]: number;
-    [Category.a]: number;
-    [Category.s]: number;
-}
-
-const fileName: string = Deno.args[0];
-const fileContent: string = await Deno.readTextFile(fileName);
-
-const [rawWorkflows, rawParts] = fileContent.split('\n\n');
-
-const workflows: Workflow[] = rawWorkflows.split('\n').map((rawWorkflow) => {
-    const [id, rest] = rawWorkflow.split('{');
-    const workflow = {
-        id,
-        conditions: [],
-        otherwise: '',
-    } as Workflow;
-    rest.substring(0, rest.length - 1).split(',').forEach((condition) => {
-        const [c, target] = condition.split(':');
-        const sign = c.charAt(1)
-        const numAsString = (c.match(/\d+/) as RegExpMatchArray);
-        if (!numAsString) {
-            workflow.otherwise = condition;
-            return;
-        }
-        const num = Number(numAsString[0]);
-        const func = (x: number, k: string) => {
-            if (sign === '<') {
-                return k === c.charAt(0) ? x < num ? target : undefined : undefined;
-            } else if (sign === '>') {
-                return k === c.charAt(0) ? x > num ? target : undefined : undefined;
-            }
-        }
-        workflow.conditions.push(func);
-    });
-    return workflow;
-});
-
-const parts: Part[] = rawParts.split('\n').map((rawPart) => {
-    const [x, m, a, s] = (rawPart.match(/\d+/g) as RegExpMatchArray) as string[];
-    return {
-        currentWorkflowId: 'in',
-        [Category.x]: Number(x),
-        [Category.m]: Number(m),
-        [Category.a]: Number(a),
-        [Category.s]: Number(s),
-    } as Part;
-});
-
-function executeWorkflow(part: Part, workflows: Workflow[]): Part {
-    if (part.currentWorkflowId === 'A' || part.currentWorkflowId === 'R') {
-        return part;
-    }
-    const workflow = workflows.find((workflow) => workflow.id === part.currentWorkflowId);
-    if (!workflow) {
-        throw new Error('No workflow found');
-    }
-    for (const condition of workflow.conditions) {
-        const nextWorkflowId = condition(part.x, 'x') || condition(part.m, 'm') || condition(part.a, 'a') || condition(part.s, 's');
-        if (nextWorkflowId) {
+type Part = {
+    x: number;
+    m: number;
+    a: number;
+    s: number;
+  };
+  
+  type Rule = {
+    rating: string;
+    operator: string;
+    value: number;
+    next: string;
+  };
+  
+  type WorkFlow = Rule[];
+  type WorkFlows = Record<string, WorkFlow>;
+  type Range = Record<string, [number, number]>;
+  
+  const parseWorkFlows = (workFlowsRaw: string): WorkFlows =>
+    workFlowsRaw
+      .split("\n")
+      .map((workFlow): [string, WorkFlow] => {
+        const [name, rulesRaw] = workFlow.split("{");
+        const rules = rulesRaw.split(",").map((rule) => {
+          if (rule[rule.length - 1] === "}") {
             return {
-                ...part,
-                currentWorkflowId: nextWorkflowId,
+              rating: null,
+              operator: null,
+              value: null,
+              next: rule.slice(0, -1),
             };
-        }
+          }
+  
+          const [, rating, operator, value, next] = rule.match(
+            /([xmas])([<>=])(\d+):(\w+)/
+          );
+          return { rating, operator, value: Number(value), next };
+        });
+  
+        return [name, rules];
+      })
+      .reduce((acc, [name, workFlow]) => {
+        acc[name] = workFlow;
+        return acc;
+      }, {});
+  
+  const parseParts = (partsRaw: string) =>
+    partsRaw
+      .split("\n")
+      .map((part) =>
+        part
+          .replaceAll(/[{}]/g, "")
+          .split(",")
+          .map((p) => p.split("="))
+      )
+      .map(
+        (part): Part =>
+          part.reduce((acc, [key, value]) => {
+            acc[key] = Number(value);
+            return acc;
+          }, {} as Part)
+      );
+  
+  const isAccepted = (
+    part: Part,
+    workFlowName: string,
+    workFlows: WorkFlows
+  ): boolean => {
+    if (workFlowName === "R") return false;
+    if (workFlowName === "A") return true;
+  
+    for (const rule of workFlows[workFlowName]) {
+      if (
+        rule.operator === null ||
+        (rule.operator === "<" && part[rule.rating] < rule.value) ||
+        (rule.operator === ">" && part[rule.rating] > rule.value)
+      )
+        return isAccepted(part, rule.next, workFlows);
     }
-    return {
-        ...part,
-        currentWorkflowId: workflow.otherwise,
+  
+    throw new Error("No rule found");
+  };
+  
+  export const getPartRatingSum = (input: string) => {
+    const [workFlowsRaw, partsRaw] = input.split("\n\n");
+  
+    const workFlows = parseWorkFlows(workFlowsRaw);
+    const parts = parseParts(partsRaw);
+  
+    return parts
+      .filter((part) => isAccepted(part, "in", workFlows))
+      .reduce((acc, part) => acc + part.x + part.m + part.s + part.a, 0);
+  };
+  
+  const copyRange = (range: Range) => JSON.parse(JSON.stringify(range));
+  
+  const getRanges = (
+    workFlows: WorkFlows,
+    workFlowName: string,
+    range: Range
+  ): Range[] => {
+    if (workFlowName === "R") return [];
+    if (workFlowName === "A") return [copyRange(range)];
+  
+    const workFlow = workFlows[workFlowName];
+  
+    const ranges = [];
+  
+    for (const rule of workFlow) {
+      if (rule.operator === null) {
+        ranges.push(...getRanges(workFlows, rule.next, copyRange(range)));
+      }
+  
+      if (rule.operator === "<") {
+        const newRange = copyRange(range);
+        newRange[rule.rating][1] = rule.value - 1;
+  
+        ranges.push(...getRanges(workFlows, rule.next, newRange));
+  
+        range[rule.rating][0] = rule.value;
+      }
+  
+      if (rule.operator === ">") {
+        const newRange = copyRange(range);
+        newRange[rule.rating][0] = rule.value + 1;
+  
+        ranges.push(...getRanges(workFlows, rule.next, newRange));
+  
+        range[rule.rating][1] = rule.value;
+      }
+    }
+  
+    return ranges;
+  };
+  
+  export const getRatingCombinations = (input: string) => {
+    const workFlows = parseWorkFlows(input.split("\n\n")[0]);
+  
+    const range: Range = {
+      x: [1, 4000],
+      m: [1, 4000],
+      a: [1, 4000],
+      s: [1, 4000],
     };
-}
+  
+    return getRanges(workFlows, "in", range)
+      .map((range) =>
+        Object.values(range).reduce((acc, [min, max]) => acc * (max - min + 1), 1)
+      )
+      .reduce((acc: number, v: number) => acc + v, 0);
+  };
 
-function executeDeepWorkflow(part: Part, workflows: Workflow[]): Part {
-    let nextPart = part;
-    while (nextPart.currentWorkflowId !== 'A' && nextPart.currentWorkflowId !== 'R') {
-        nextPart = executeWorkflow(nextPart, workflows);
-    }
-    return nextPart;
-}
-
-function executeAllParts(parts: Part[], workflows: Workflow[]): Part[] {
-    return parts.map((part) => executeDeepWorkflow(part, workflows));
-}
-
-console.log('Part 1:', executeAllParts(parts, workflows).reduce((acc, part) => {
-    if (part.currentWorkflowId === 'A') {
-        return acc + part.x + part.m + part.a + part.s;
-    }
-    return acc;
-}, 0));
-
-// function minimizeRules(workflows: Workflow[]): any {
-//     const otherwiseA = workflows.filter((workflow) => workflow.id === 'A');
-//     // para entrar por el otherwise, el resto de reglas se han tenido que no cumplir
-    
-// }
+console.log('Part 1:', getPartRatingSum(Deno.readTextFileSync("input.txt")));
+console.log('Part 2:', getRatingCombinations(Deno.readTextFileSync("input.txt")));
