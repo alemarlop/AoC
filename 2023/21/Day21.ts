@@ -62,8 +62,10 @@ console.log('Part 1:', possibleEnds(matrix, startingPoint, 64));
 console.log('Part 2:', getPart2(matrix, startingPoint, 26501365));
 
 function getPart2(matrix: string[][], startingPoint: [number, number], steps: number) {
-    const l1 = [65, possibleEnds(matrix, startingPoint, 65)] as [number, number];
-    const l2 = [65 + 131, possibleEnds(matrix, startingPoint, 65 + 131)] as [number, number];
-    const l3 = [65 + 2 * 131, possibleEnds(matrix, startingPoint, 65 + 2 * 131)] as [number, number];
+    const length = matrix.length;
+    const remainder = steps % length;
+    const l1 = [remainder, possibleEnds(matrix, startingPoint, remainder)] as [number, number];
+    const l2 = [remainder + length, possibleEnds(matrix, startingPoint, remainder + length)] as [number, number];
+    const l3 = [remainder + 2 * length, possibleEnds(matrix, startingPoint, remainder + 2 * length)] as [number, number];
     return Math.floor(lagrange(l1, l2, l3)(steps));
 }
