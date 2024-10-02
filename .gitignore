@@ -3,4 +3,4 @@
 **/node_modules/
 *.hi
 *.o
-/dist-newstyle/
+**/dist-newstyle/
