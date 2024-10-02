@@ -1,3 +1,6 @@
 *.txt
 *.json
 **/node_modules/
+*.hi
+*.o
+/dist-newstyle/
