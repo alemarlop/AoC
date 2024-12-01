@@ -1,10 +1,5 @@
 defmodule Day1 do
-  def sort_many({l1, l2}), do: {Enum.sort(l1), Enum.sort(l2)}
-
-  def run do
-    input = format()
-    {p1(input), p2(input)}
-  end
+  def run, do: (input = format()) && {p1(input), p2(input)}
 
   def format do
     hd(System.argv())
@@ -15,10 +10,8 @@ defmodule Day1 do
     |> Enum.unzip()
   end
 
-  def p1(input) do
-    {l1s, l2s} = sort_many(input)
-    Stream.zip(l1s, l2s) |> Enum.reduce(0, fn {x, y}, acc -> acc + abs(y - x) end)
-  end
+  def p1({l1, l2}),
+    do: Stream.zip(Enum.sort(l1), Enum.sort(l2)) |> Enum.reduce(0, fn {x, y}, acc -> acc + abs(y - x) end)
 
   def p2({l1, l2}) do
     freq_map = Enum.frequencies(l2)
