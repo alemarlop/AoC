@@ -23,14 +23,14 @@ defmodule Day6 do
     {row, column}
   end
 
-  def calculate_movements(matrix, {x, y}, direction, visited, count) do
+  def calculate_movements(matrix, {x, y}, direction, visited) do
     case MapSet.member?(visited, {x, y, direction}) do
       true -> :loop
-      false -> calculate_movements(matrix, {x, y}, direction, visited, count, :miss)
+      false -> calculate_movements(matrix, {x, y}, direction, visited, :miss)
     end
   end
 
-  def calculate_movements(matrix, {x, y}, direction, visited, count, :miss) do
+  def calculate_movements(matrix, {x, y}, direction, visited, :miss) do
     {dx, dy} = Map.get(@directions, direction)
     row = Enum.at(matrix, x)
     {new_x, new_y} = calculate_next(matrix, {x, y}, {dx, dy})
@@ -39,9 +39,9 @@ defmodule Day6 do
     MapSet.put(visited, {x, y, direction})
     case new_point do
       "#" -> new_matrix = List.replace_at(matrix, x, List.replace_at(row, y, "X"))
-             calculate_movements(new_matrix, {x, y}, Map.get(@rotations, direction), MapSet.put(visited, {x, y, direction}), count)
+             calculate_movements(new_matrix, {x, y}, Map.get(@rotations, direction), MapSet.put(visited, {x, y, direction}))
       _   -> new_matrix = List.replace_at(matrix, new_x, List.replace_at(new_row, new_y, "X"))
-             calculate_movements(new_matrix, {new_x, new_y}, direction, MapSet.put(visited, {x, y, "X"}), count + 1)
+             calculate_movements(new_matrix, {new_x, new_y}, direction, MapSet.put(visited, {x, y, "X"}))
     end
   rescue
     _ -> matrix
@@ -56,14 +56,14 @@ end
 matrix = hd(System.argv)
 |> File.read!() |> String.split("\n", trim: true) |> Enum.map(&String.split(&1, "", trim: true))
 {x, y} = Day6.get_starting_point(matrix, "^")
-p1_map = Day6.calculate_movements(matrix, {x, y}, "^", MapSet.new([]), 0)
+p1_map = Day6.calculate_movements(matrix, {x, y}, "^", MapSet.new([]))
+p1 = p1_map |> Enum.join("\n") |> String.split("", trim: true) |> Enum.count(& &1 == "X")
 
 variants = p1_map |> Enum.join("\n") |> String.split("", trim: true) |> Day6.calculate_variants([],[])
-p1 = length(variants)
 f_variants = Enum.map(variants, fn v -> Enum.chunk_by(v, fn chunk -> chunk == "\n" end) |> Enum.reject(fn chunk -> chunk == ["\n"] end) end)
 f_variants = Enum.map(f_variants, fn variant -> List.replace_at(variant, x, List.replace_at(Enum.at(variant, x), y, "^")) end)
 
-p2 = Task.async_stream(f_variants, Day6, :calculate_movements, [{x, y}, "^", MapSet.new([]), 0], max_concurrency: 16)
+p2 = Task.async_stream(f_variants, Day6, :calculate_movements, [{x, y}, "^", MapSet.new([])], max_concurrency: 16)
 |> Enum.to_list()
 |> Enum.reduce(-1, fn x, acc -> acc + case x do
   {:ok, :loop} -> 1
