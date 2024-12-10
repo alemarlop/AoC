@@ -25,6 +25,6 @@ matrix = hd(System.argv) |> File.read!() |> String.split("\n", trim: true)
 (for row <- 0..(length(matrix) - 1), column <- 0..(length(matrix) - 1), reduce: {0,0} do
   {p1, p2} -> case Day10.run(matrix, Enum.at(matrix, row) |> Enum.at(column), {row, column}) do
       [] -> {p1, p2}
-      res -> {p1 + length(res |> Enum.uniq()), p2 + (Enum.frequencies(res) |> Enum.map(fn {k, v} -> v end) |> Enum.sum())}
+      res -> {p1 + length(res |> Enum.uniq()), p2 + (Enum.frequencies(res) |> Enum.map(fn {_, v} -> v end) |> Enum.sum())}
     end
 end) |> IO.inspect()
