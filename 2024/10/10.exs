@@ -1,5 +1,5 @@
 defmodule Day10 do
-  @offsets [{0, 1}, {1, 0}, {0, -1},{-1, 0}]
+  @offsets [{0, 1}, {1, 0}, {0, -1}, {-1, 0}]
 
   def to_check({row, column}), do: Enum.map(@offsets, fn {r, c} -> {row + r, column + c} end)
   def get_value(matrix, {row, column} = p), do: verify_bounds(matrix, p) && Enum.at(Enum.at(matrix, row), column)
@@ -9,8 +9,8 @@ defmodule Day10 do
   def verify_bounds(_, _), do: nil
 
   def run(matrix, 0, position), do: run(matrix, 0, position, :in_trail)
-  def run(matrix, 9, position, :in_trail), do: get_value(matrix, position) == 9 && [position] || []
   def run(_, _, _), do: []
+  def run(matrix, 9, position, :in_trail), do: get_value(matrix, position) == 9 && [position] || []
   def run(matrix, to, position, :in_trail) do
     case get_value(matrix, position) do
       val when val == to -> to_check(position) |> Enum.map(fn pos -> run(matrix, to+1, pos, :in_trail) end)  |> List.flatten()
@@ -27,5 +27,4 @@ matrix = hd(System.argv) |> File.read!() |> String.split("\n", trim: true)
       [] -> {p1, p2}
       res -> {p1 + length(res |> Enum.uniq()), p2 + (Enum.frequencies(res) |> Enum.map(fn {k, v} -> v end) |> Enum.sum())}
     end
-end)
-|> IO.inspect()
+end) |> IO.inspect()
