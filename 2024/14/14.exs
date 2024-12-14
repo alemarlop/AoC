@@ -22,12 +22,8 @@ defmodule Day14 do
   def verify_solution(list), do: Enum.any?(list, fn {x, y} -> starts_christmas_tree?({x, y}, list) end)
 
   def starts_christmas_tree?({x, y}, list) do
-    next_two = [{x + 1, y + 1}, {x - 1, y + 1}]
-    next_following_two = [{x + 2, y + 2}, {x - 2, y + 2}]
-    next_following_following_two = [{x + 3, y + 3}, {x - 3, y + 3}]
-    Enum.all?(next_two, fn {nx, ny} -> Enum.member?(list, {nx, ny}) end)
-    && Enum.all?(next_following_two, fn {nx, ny} -> Enum.member?(list, {nx, ny}) end)
-    && Enum.all?(next_following_following_two, fn {nx, ny} -> Enum.member?(list, {nx, ny}) end)
+    [{x + 1, y + 1}, {x - 1, y + 1}, {x + 2, y + 2}, {x - 2, y + 2}, {x + 3, y + 3}, {x - 3, y + 3}]
+    |> Enum.all?(& Enum.member?(list, &1))
   end
 end
 
