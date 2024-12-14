@@ -1,5 +1,4 @@
 defmodule Day14 do
-
   def c_point({nx, ny, dx, dy}, {max_x, max_y}), do: {c_point(nx, max_x), c_point(ny, max_y), dx, dy}
   def c_point(n, m) when n < 0, do: m + rem(n, m)
   def c_point(n, m) when n >= m, do: rem(n, m)
