@@ -1,23 +1,15 @@
 defmodule Day14 do
 
   def c_point({nx, ny, dx, dy}, {max_x, max_y}), do: {c_point(nx, max_x), c_point(ny, max_y), dx, dy}
-  def c_point(n, m) do
-    cond do
-      n < 0 -> m + rem(n, m)
-      n >= m -> rem(n, m)
-      true -> n
-    end
-  end
+  def c_point(n, m) when n < 0, do: m + rem(n, m)
+  def c_point(n, m) when n >= m, do: rem(n, m)
+  def c_point(n, _), do: n
 
   def get_quadrant({x, y}, {max_x, max_y}),
     do: {get_quadrant(x, max_x, {:left, :right}), get_quadrant(y, max_y, {:top, :bottom})}
-  def get_quadrant(n, m, {s1, s2}) do
-    cond do
-      n < div(m, 2) -> s1
-      n > div(m, 2) -> s2
-      true -> :center
-    end
-  end
+  def get_quadrant(n, m, {s1, _}) when n < div(m, 2), do: s1
+  def get_quadrant(n, m, {_, s2}) when n > div(m, 2), do: s2
+  def get_quadrant(_, _, _), do: :center
 
   def try_next({nx, ny, dx, dy}, {max_x, max_y}), do: c_point({nx + dx, ny + dy, dx, dy}, {max_x, max_y})
 
