@@ -10,10 +10,8 @@ defmodule Day4 do
   end
 
   def get_accessible_rolls(rolls_set) do
-    as_list = MapSet.to_list(rolls_set)
-
     accessible_rolls =
-      Enum.filter(as_list, fn {x, y} ->
+      Enum.filter(rolls_set, fn {x, y} ->
         @adjacent_offsets
         |> Enum.filter(fn {xi, yi} -> MapSet.member?(rolls_set, {x + xi, y + yi}) end)
         |> Enum.count() < 4
